@@ -37,6 +37,9 @@ class ProbClassConfusionBasedFeatureDistrTable(Widget):
         if utility_columns.target is None or utility_columns.prediction is None:
             raise ValueError(f"Widget [{self.title}] requires 'target' or 'prediction' columns")
 
+        additional_graphs_data = []
+        params_data = []
+
         if current_data is not None:
             ref_array_prediction = reference_data[utility_columns.prediction].to_numpy()
             ref_prediction_ids = np.argmax(ref_array_prediction, axis=-1)
@@ -48,9 +51,6 @@ class ProbClassConfusionBasedFeatureDistrTable(Widget):
             current_prediction_labels = [utility_columns.prediction[x] for x in
                                          current_prediction_ids]
             current_data['prediction_labels'] = current_prediction_labels
-
-            additional_graphs_data = []
-            params_data = []
 
             for feature_name in results.columns.get_all_features_list(cat_before_num=False):
                 # add data for table in params
@@ -102,18 +102,23 @@ class ProbClassConfusionBasedFeatureDistrTable(Widget):
                     fig = make_subplots(rows=1, cols=2, subplot_titles=("Reference", "Current"))
 
                     # REF
-                    fig.add_trace(go.Scatter(
-                        x=reference_data[reference_data[utility_columns.target] == label][
-                            feature_name],
-                        y=reference_data[reference_data[utility_columns.target] == label][label],
-                        mode='markers',
-                        name=str(label) + ' (ref)',
-                        marker=dict(
-                            size=6,
-                            color=color_options.get_current_data_color()
-                        )
-                    ),
-                        row=1, col=1
+                    fig.add_trace(
+                        go.Scatter(
+                            x=reference_data[
+                                reference_data[utility_columns.target] == label
+                            ][feature_name],
+                            y=reference_data[
+                                reference_data[utility_columns.target] == label
+                            ][label],
+                            mode='markers',
+                            name=f'{str(label)} (ref)',
+                            marker=dict(
+                                size=6,
+                                color=color_options.get_current_data_color(),
+                            ),
+                        ),
+                        row=1,
+                        col=1,
                     )
 
                     fig.add_trace(go.Scatter(
@@ -143,18 +148,24 @@ class ProbClassConfusionBasedFeatureDistrTable(Widget):
                     )
 
                     # current Prediction
-                    fig.add_trace(go.Scatter(
-                        x=current_data[current_data[utility_columns.target] == label][feature_name],
-                        y=current_data[current_data[utility_columns.target] == label][label],
-                        mode='markers',
-                        name=str(label) + ' (curr)',
-                        marker=dict(
-                            size=6,
-                            # set color equal to a variable
-                            color=color_options.get_current_data_color()
-                        )
-                    ),
-                        row=1, col=2
+                    fig.add_trace(
+                        go.Scatter(
+                            x=current_data[
+                                current_data[utility_columns.target] == label
+                            ][feature_name],
+                            y=current_data[
+                                current_data[utility_columns.target] == label
+                            ][label],
+                            mode='markers',
+                            name=f'{str(label)} (curr)',
+                            marker=dict(
+                                size=6,
+                                # set color equal to a variable
+                                color=color_options.get_current_data_color(),
+                            ),
+                        ),
+                        row=1,
+                        col=2,
                     )
 
                     fig.add_trace(go.Scatter(
@@ -208,9 +219,6 @@ class ProbClassConfusionBasedFeatureDistrTable(Widget):
             ref_prediction_ids = np.argmax(ref_array_prediction, axis=-1)
             ref_prediction_labels = [utility_columns.prediction[x] for x in ref_prediction_ids]
             reference_data['prediction_labels'] = ref_prediction_labels
-
-            additional_graphs_data = []
-            params_data = []
 
             for feature_name in results.columns.get_all_features_list(cat_before_num=False):
                 # add data for table in params

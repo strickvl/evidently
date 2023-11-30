@@ -42,22 +42,24 @@ def register_stattest(stat_test: StatTest):
 def _get_default_stattest(reference_data: pd.Series, current_data: pd.Series, feature_type: str) -> StatTest:
     n_values = reference_data.append(current_data).nunique()
     if reference_data.shape[0] <= 1000:
-        if feature_type == "num":
-            if n_values <= 5:
-                return stattests.chi_stat_test if n_values > 2 else stattests.z_stat_test
-            elif n_values > 5:
-                return stattests.ks_stat_test
-        elif feature_type == "cat":
+        if (
+            feature_type != "cat"
+            and feature_type == "num"
+            and n_values <= 5
+            or feature_type == "cat"
+        ):
             return stattests.chi_stat_test if n_values > 2 else stattests.z_stat_test
-    elif reference_data.shape[0] > 1000:
-        if feature_type == "num":
-            n_values = reference_data.append(current_data).nunique()
-            if n_values <= 5:
-                return stattests.jensenshannon_stat_test
-            elif n_values > 5:
-                return stattests.wasserstein_stat_test
-        elif feature_type == "cat":
-            return stattests.jensenshannon_stat_test
+        elif feature_type == "num":
+            return stattests.ks_stat_test
+    elif feature_type == "cat":
+        return stattests.jensenshannon_stat_test
+    elif feature_type == "num":
+        n_values = reference_data.append(current_data).nunique()
+        return (
+            stattests.jensenshannon_stat_test
+            if n_values <= 5
+            else stattests.wasserstein_stat_test
+        )
     raise ValueError(f"Unexpected feature_type {feature_type}")
 
 
@@ -76,7 +78,7 @@ def get_stattest(reference_data: pd.Series,
             func=stattest_func,
             allowed_feature_types=[]
         )
-    if callable(stattest_func) and stattest_func in _registered_stat_test_funcs:
+    if callable(stattest_func):
         stattest_name = _registered_stat_test_funcs[stattest_func]
     elif isinstance(stattest_func, str):
         stattest_name = stattest_func

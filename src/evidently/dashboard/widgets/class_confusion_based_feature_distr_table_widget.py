@@ -225,6 +225,4 @@ def _confusion(row, target_column, prediction_column, label):
         return 'TP'
     if row[target_column] != label and row[prediction_column] == label:
         return 'FP'
-    if row[target_column] == label and row[prediction_column] != label:
-        return 'FN'
-    return 'TN'  # last option
+    return 'FN' if row[target_column] == label else 'TN'

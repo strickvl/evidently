@@ -16,9 +16,9 @@ from evidently.analyzers.utils import process_columns, recognize_task
 
 
 def dataset_drift_evaluation(p_values, drift_share=0.5) -> Tuple[int, float, bool]:
-    n_drifted_features = sum([1 if x.drifted else 0 for _, x in p_values.items()])
+    n_drifted_features = sum(1 if x.drifted else 0 for _, x in p_values.items())
     share_drifted_features = n_drifted_features / len(p_values)
-    dataset_drift = bool(share_drifted_features >= drift_share)
+    dataset_drift = share_drifted_features >= drift_share
     return n_drifted_features, share_drifted_features, dataset_drift
 
 
@@ -123,12 +123,12 @@ class DataDriftAnalyzer(Analyzer):
                 drift_detected=drifted,
             )
 
+        feature_type = "cat"
         for feature_name in cat_feature_names:
             threshold = data_drift_options.get_threshold(feature_name)
             feature_ref_data = reference_data[feature_name].dropna()
             feature_cur_data = current_data[feature_name].dropna()
 
-            feature_type = "cat"
             stat_test = get_stattest(feature_ref_data,
                                      feature_cur_data,
                                      feature_type,
@@ -164,15 +164,13 @@ class DataDriftAnalyzer(Analyzer):
             dataset_drift=dataset_drift,
             features=features_metrics,
         )
-        result = DataDriftAnalyzerResults(
+        return DataDriftAnalyzerResults(
             columns=columns,
             options=data_drift_options,
             metrics=result_metrics,
         )
-        return result
 
     def _get_pred_labels_from_prob(self, data: pd.DataFrame, prediction_column: list):
         array_prediction = data[prediction_column].to_numpy()
         prediction_ids = np.argmax(array_prediction, axis=-1)
-        prediction_labels = [prediction_column[x] for x in prediction_ids]
-        return prediction_labels
+        return [prediction_column[x] for x in prediction_ids]

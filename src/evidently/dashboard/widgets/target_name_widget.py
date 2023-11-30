@@ -35,21 +35,21 @@ class TargetNameWidget(Widget):
         results_columns = None
 
         if self.kind == 'regression':
-            regression_results = RegressionPerformanceAnalyzer.get_results(analyzers_results)
-
-            if regression_results:
+            if regression_results := RegressionPerformanceAnalyzer.get_results(
+                analyzers_results
+            ):
                 results_columns = regression_results.columns
 
         elif self.kind == 'classification':
-            classification_results = ClassificationPerformanceAnalyzer.get_results(analyzers_results)
-
-            if classification_results:
+            if classification_results := ClassificationPerformanceAnalyzer.get_results(
+                analyzers_results
+            ):
                 results_columns = classification_results.columns
 
         elif self.kind == 'prob_classification':
-            prob_classification_results = ProbClassificationPerformanceAnalyzer.get_results(analyzers_results)
-
-            if prob_classification_results:
+            if prob_classification_results := ProbClassificationPerformanceAnalyzer.get_results(
+                analyzers_results
+            ):
                 results_columns = prob_classification_results.columns
 
         else:

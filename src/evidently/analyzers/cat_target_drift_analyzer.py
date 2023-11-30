@@ -180,5 +180,4 @@ class CatTargetDriftAnalyzer(Analyzer):
     def _get_pred_labels_from_prob(self, df: pd.DataFrame, prediction_column: list):
         array_prediction = df[prediction_column].to_numpy()
         prediction_ids = np.argmax(array_prediction, axis=-1)
-        prediction_labels = [prediction_column[x] for x in prediction_ids]
-        return prediction_labels
+        return [prediction_column[x] for x in prediction_ids]

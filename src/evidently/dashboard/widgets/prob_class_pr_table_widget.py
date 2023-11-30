@@ -78,44 +78,25 @@ class ProbClassPRTableWidget(Widget):
                     'f7': float(recall)
                 })
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="big_table",
                 size=1 if current_data is not None else 2,
                 params={
                     "rowsPerPage": 21,
                     "columns": [
-                        {
-                            "title": "Top(%)",
-                            "field": "f1",
-                            "sort": "asc"
-                        },
-                        {
-                            "title": "Count",
-                            "field": "f2"
-                        },
+                        {"title": "Top(%)", "field": "f1", "sort": "asc"},
+                        {"title": "Count", "field": "f2"},
                         {
                             "title": "Prob",
                             "field": "f3",
                         },
-                        {
-                            "title": "TP",
-                            "field": "f4"
-                        },
-                        {
-                            "title": "FP",
-                            "field": "f5"
-                        },
-                        {
-                            "title": "Precision",
-                            "field": "f6"
-                        },
-                        {
-                            "title": "Recall",
-                            "field": "f7"
-                        }
+                        {"title": "TP", "field": "f4"},
+                        {"title": "FP", "field": "f5"},
+                        {"title": "Precision", "field": "f6"},
+                        {"title": "Recall", "field": "f7"},
                     ],
-                    "data": params_data
+                    "data": params_data,
                 },
             )
 
@@ -197,10 +178,9 @@ class ProbClassPRTableWidget(Widget):
                     )
                 ))
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 type="tabs",
                 title=self.title,
                 size=1 if current_data is not None else 2,
-                tabs=tabs
+                tabs=tabs,
             )
-        return widget_info

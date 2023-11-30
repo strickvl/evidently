@@ -93,27 +93,24 @@ class CatTargetPredFeatureTable(Widget):
 
                 pred_fig_json = json.loads(pred_fig.to_json())
 
-                # write plot data in table as additional data
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_target_values',
-                        {
-                            "data": target_fig_json['data'],
-                            "layout": target_fig_json['layout']
-                        },
+                additional_graphs_data.extend(
+                    (
+                        AdditionalGraphInfo(
+                            feature_name + '_target_values',
+                            {
+                                "data": target_fig_json['data'],
+                                "layout": target_fig_json['layout'],
+                            },
+                        ),
+                        AdditionalGraphInfo(
+                            feature_name + '_prediction_values',
+                            {
+                                "data": pred_fig_json['data'],
+                                "layout": pred_fig_json['layout'],
+                            },
+                        ),
                     )
                 )
-
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_prediction_values',
-                        {
-                            "data": pred_fig_json['data'],
-                            "layout": pred_fig_json['layout']
-                        },
-                    )
-                )
-
             return BaseWidgetInfo(
                 title=self.title,
                 type="big_table",

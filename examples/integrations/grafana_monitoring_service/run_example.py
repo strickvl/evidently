@@ -25,9 +25,7 @@ def setup_logger():
 
 def check_docker_installation():
     logging.info("Check docker version")
-    docker_version_result = os.system("docker -v")
-
-    if docker_version_result:
+    if docker_version_result := os.system("docker -v"):
         exit("Docker was not found. Try to install it with https://www.docker.com")
 
 
@@ -75,9 +73,9 @@ def run_docker_compose():
 
 def run_script(cmd: list, wait: bool) -> None:
     logging.info("Run %s", ' '.join(cmd))
-    script_process = subprocess.Popen(' '.join(cmd), stdout=subprocess.PIPE, shell=True)
-
     if wait:
+        script_process = subprocess.Popen(' '.join(cmd), stdout=subprocess.PIPE, shell=True)
+
         script_process.wait()
 
         if script_process.returncode != 0:

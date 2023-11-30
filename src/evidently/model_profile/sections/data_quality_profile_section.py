@@ -23,28 +23,29 @@ class DataQualityProfileSection(ProfileSection):
 
     @staticmethod
     def _get_stats_as_dict(all_features: DataQualityStats) -> Dict[str, Dict[str, Any]]:
-        result: Dict[str, Dict[str, Any]] = {}
-
-        for feature_name, feature_stats in all_features.get_all_features().items():
-            result[feature_name] = {}
-
-            for stat_name, stat_value in feature_stats.as_dict().items():
-                if stat_value is not None:
-                    result[feature_name][stat_name] = stat_value
-
+        result: Dict[str, Dict[str, Any]] = {
+            feature_name: {
+                stat_name: stat_value
+                for stat_name, stat_value in feature_stats.as_dict().items()
+                if stat_value is not None
+            }
+            for feature_name, feature_stats in all_features.get_all_features().items()
+        }
         return result
 
     @staticmethod
     def _get_corr_matrices_as_dict(correlations: Dict[str, pd.DataFrame]) -> Dict[str, Any]:
-        result: Dict[str, Dict[str, Any]] = {}
-
-        for kind, corr_df in correlations.items():
-            result[kind] = {}
-            for feature in corr_df.columns:
-                result[kind][feature] = {
-                    k: v for (k, v) in zip(corr_df[feature].index, corr_df[feature]) if k != feature
+        result: Dict[str, Dict[str, Any]] = {
+            kind: {
+                feature: {
+                    k: v
+                    for (k, v) in zip(corr_df[feature].index, corr_df[feature])
+                    if k != feature
                 }
-
+                for feature in corr_df.columns
+            }
+            for kind, corr_df in correlations.items()
+        }
         return result
 
     def calculate(self, reference_data, current_data, column_mapping, analyzers_results):

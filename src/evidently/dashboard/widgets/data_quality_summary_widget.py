@@ -44,7 +44,7 @@ class DataQualitySummaryWidget(Widget):
                       'empty features', 'almost constant features', 'almost empty features']
         metrics = self._get_stats_with_names(stats_list, reference_stats, current_stats)
 
-        wi = BaseWidgetInfo(
+        return BaseWidgetInfo(
             type="rich_data",
             title="",
             size=2,
@@ -56,10 +56,7 @@ class DataQualitySummaryWidget(Widget):
             },
         )
 
-        return wi
-
     def _get_df_stats(self, data_quality_results, df, df_stats):
-        result = {}
         all_features = data_quality_results.columns.get_all_features_list(
             cat_before_num=True, include_datetime_feature=True
         )
@@ -75,16 +72,12 @@ class DataQualitySummaryWidget(Widget):
         else:
             date_name = None
 
-        if target_name:
-            result['target column'] = target_name
-        else:
-            result['target column'] = 'None'
-        if date_name:
-            result['date column'] = date_name
-        else:
-            result['date column'] = 'None'
-        result['number of variables'] = len(all_features)
-        result['number of observations'] = df.shape[0]
+        result = {
+            'target column': target_name if target_name else 'None',
+            'date column': date_name if date_name else 'None',
+            'number of variables': len(all_features),
+            'number of observations': df.shape[0],
+        }
         missing_cells = df[all_features].isnull().sum().sum()
         missing_cells_percentage = np.round(
             missing_cells / (result['number of variables'] * result['number of observations']), 2)
@@ -93,7 +86,7 @@ class DataQualitySummaryWidget(Widget):
         result['numeric features'] = len(data_quality_results.columns.num_feature_names)
         result['datetime features'] = len(data_quality_results.columns.datetime_feature_names)
         if date_name:
-            result['datetime features'] = result['datetime features'] + 1
+            result['datetime features'] += 1
         constant_values = pd.Series([df_stats[x].most_common_value_percentage for x in all_features])
         empty_values = pd.Series([df_stats[x].missing_percentage for x in all_features])
         result['constant features'] = (constant_values == 100).sum()

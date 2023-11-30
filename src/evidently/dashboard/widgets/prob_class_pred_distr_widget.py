@@ -37,7 +37,7 @@ class ProbClassPredDistrWidget(Widget):
         if isinstance(utility_columns.prediction, str) or utility_columns.prediction is None:
             return None
 
-        if utility_columns.target is None or utility_columns.prediction is None:
+        if utility_columns.target is None:
             if self.dataset == 'reference':
                 raise ValueError(f"Widget [{self.title}] requires 'target' and 'prediction' columns")
 
@@ -88,14 +88,16 @@ class ProbClassPredDistrWidget(Widget):
 
             pred_distr_json = json.loads(pred_distr.to_json())
 
-            graphs.append({
-                "id": "tab_" + str(label),
-                "title": str(label),
-                "graph": {
-                    "data": pred_distr_json["data"],
-                    "layout": pred_distr_json["layout"],
+            graphs.append(
+                {
+                    "id": f"tab_{str(label)}",
+                    "title": str(label),
+                    "graph": {
+                        "data": pred_distr_json["data"],
+                        "layout": pred_distr_json["layout"],
+                    },
                 }
-            })
+            )
 
         return BaseWidgetInfo(
             title=self.title,

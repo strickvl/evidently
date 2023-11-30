@@ -42,13 +42,11 @@ def _detect_dataset_drift(reference, production, column_mapping, get_ratio=False
     report = data_drift_profile.json()
     json_report = json.loads(report)
 
-    if get_ratio:
-        n_features = json_report["data_drift"]["data"]["metrics"]["n_features"]
-        n_drifted_features = json_report["data_drift"]["data"]["metrics"]["n_drifted_features"]
-        return n_drifted_features / n_features
-
-    else:
+    if not get_ratio:
         return json_report["data_drift"]["data"]["metrics"]["dataset_drift"]
+    n_features = json_report["data_drift"]["data"]["metrics"]["n_features"]
+    n_drifted_features = json_report["data_drift"]["data"]["metrics"]["n_drifted_features"]
+    return n_drifted_features / n_features
 
 
 def load_data_execute(**context):
@@ -73,9 +71,7 @@ def drift_analysis_execute(**context):
 
 
 def detect_drift_execute(**context):
-    # print("detect_drift_execute   ")
-    drift = context.get("ti").xcom_pull(key="dataset_drift")
-    if drift:
+    if drift := context.get("ti").xcom_pull(key="dataset_drift"):
         return "create_dashboard"
 
 
@@ -89,7 +85,7 @@ def create_dashboard_execute(**context):
     try:
         os.mkdir(dir_path)
     except OSError:
-        print("Creation of the directory {} failed".format(dir_path))
+        print(f"Creation of the directory {dir_path} failed")
 
     data_drift_dashboard.save(os.path.join(dir_path, file_path))
 

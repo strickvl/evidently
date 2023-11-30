@@ -57,8 +57,7 @@ def _generate_additional_graph_num_feature(
     else:
         current_xbins = None
         current_nbinsx = data_drift_options.get_nbinsx(name)
-    quantiles = quality_metrics_options.get_cut_quantile(name)
-    if quantiles:
+    if quantiles := quality_metrics_options.get_cut_quantile(name):
         side, q = quantiles
         cqt = CutQuantileTransformer(side=side, q=q)
         cqt.fit(reference_data[name])
@@ -245,8 +244,6 @@ class DataDriftTableWidget(Widget):
         if current_data is None:
             raise ValueError("current_data should be present")
 
-        # set params data
-        params_data = []
         data_drift_options = self.options_provider.get(DataDriftOptions)
         quality_metrics_options = self.options_provider.get(QualityMetricsOptions)
 
@@ -262,16 +259,14 @@ class DataDriftTableWidget(Widget):
         if prediction_column and isinstance(prediction_column, str):
             columns.append(prediction_column)
             all_features.remove(prediction_column)
-        columns = columns + all_features
+        columns += all_features
 
-        for feature_name in columns:
-            params_data.append(
-                _generate_feature_params(
-                    feature_name,
-                    data_drift_results.metrics.features[feature_name]
-                )
+        params_data = [
+            _generate_feature_params(
+                feature_name, data_drift_results.metrics.features[feature_name]
             )
-
+            for feature_name in columns
+        ]
         # set additionalGraphs
         additional_graphs_data = []
         for feature_name in columns:

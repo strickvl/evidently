@@ -20,9 +20,8 @@ def _error_bias_string(quantile_5, quantile_95):
     def __error_bias_string(error):
         if error <= quantile_5:
             return 'Underestimation'
-        if error < quantile_95:
-            return 'Majority'
-        return 'Overestimation'
+        return 'Majority' if error < quantile_95 else 'Overestimation'
+
     return __error_bias_string
 
 
@@ -44,6 +43,9 @@ class UnderperformSegmTableWidget(Widget):
             raise ValueError(f"Widget [{self.title}] requires 'target' and 'prediction' columns.")
 
         widget_info = None
+        params_data = []
+        additional_graphs_data = []
+
         if current_data is not None:
             current_data.replace([np.inf, -np.inf], np.nan, inplace=True)
             current_data.dropna(axis=0, how='any', inplace=True)
@@ -71,9 +73,6 @@ class UnderperformSegmTableWidget(Widget):
 
             reference_data.drop(['dataset', 'Error bias'], axis=1, inplace=True)
             current_data.drop(['dataset', 'Error bias'], axis=1, inplace=True)
-
-            params_data = []
-            additional_graphs_data = []
 
             for feature_name in results.columns.num_feature_names:
                 feature_type = 'num'
@@ -166,29 +165,27 @@ class UnderperformSegmTableWidget(Widget):
                     }
                 )
 
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_hist',
-                        {
-                            "data": feature_hist_json['data'],
-                            "layout": feature_hist_json['layout']
-                        }
+                additional_graphs_data.extend(
+                    (
+                        AdditionalGraphInfo(
+                            feature_name + '_hist',
+                            {
+                                "data": feature_hist_json['data'],
+                                "layout": feature_hist_json['layout'],
+                            },
+                        ),
+                        AdditionalGraphInfo(
+                            feature_name + '_segm',
+                            {
+                                "data": segment_json['data'],
+                                "layout": segment_json['layout'],
+                            },
+                        ),
                     )
                 )
-
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_segm',
-                        {
-                            "data": segment_json['data'],
-                            "layout": segment_json['layout']
-                        }
-                    )
-                )
+            feature_type = 'cat'
 
             for feature_name in results.columns.cat_feature_names:
-                feature_type = 'cat'
-
                 feature_hist = px.histogram(merged_data, x=feature_name, color='Error bias', facet_col="dataset",
                                             histnorm='percent', barmode='overlay',
                                             category_orders={"dataset": ["Reference", "Current"],
@@ -276,79 +273,49 @@ class UnderperformSegmTableWidget(Widget):
                     }
                 )
 
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_hist',
-                        {
-                            "data": feature_hist_json['data'],
-                            "layout": feature_hist_json['layout']
-                        }
+                additional_graphs_data.extend(
+                    (
+                        AdditionalGraphInfo(
+                            feature_name + '_hist',
+                            {
+                                "data": feature_hist_json['data'],
+                                "layout": feature_hist_json['layout'],
+                            },
+                        ),
+                        AdditionalGraphInfo(
+                            feature_name + '_segm',
+                            {
+                                "data": segment_json['data'],
+                                "layout": segment_json['layout'],
+                            },
+                        ),
                     )
                 )
-
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_segm',
-                        {
-                            "data": segment_json['data'],
-                            "layout": segment_json['layout']
-                        }
-                    )
-                )
-
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="big_table",
                 size=2,
                 params={
                     "rowsPerPage": min(results.columns.get_features_len(), 10),
                     "columns": [
-                        {
-                            "title": "Feature",
-                            "field": "f1"
-                        },
-                        {
-                            "title": "Type",
-                            "field": "f2"
-                        },
-                        {
-                            "title": "REF: Majority",
-                            "field": "f3"
-                        },
-                        {
-                            "title": "REF: Under",
-                            "field": "f4"
-                        },
-                        {
-                            "title": "REF: Over",
-                            "field": "f5"
-                        },
-                        {
-                            "title": "REF: Range(%)",
-                            "field": "f6"
-                        },
-                        {
-                            "title": "CURR: Majority",
-                            "field": "f7"
-                        },
-                        {
-                            "title": "CURR: Under",
-                            "field": "f8"
-                        },
-                        {
-                            "title": "CURR: Over",
-                            "field": "f9"
-                        },
+                        {"title": "Feature", "field": "f1"},
+                        {"title": "Type", "field": "f2"},
+                        {"title": "REF: Majority", "field": "f3"},
+                        {"title": "REF: Under", "field": "f4"},
+                        {"title": "REF: Over", "field": "f5"},
+                        {"title": "REF: Range(%)", "field": "f6"},
+                        {"title": "CURR: Majority", "field": "f7"},
+                        {"title": "CURR: Under", "field": "f8"},
+                        {"title": "CURR: Over", "field": "f9"},
                         {
                             "title": "CURR: Range(%)",
                             "field": "f10",
-                            "sort": "desc"
-                        }
-
+                            "sort": "desc",
+                        },
                     ],
-                    "data": params_data
+                    "data": params_data,
                 },
-                additionalGraphs=additional_graphs_data
+                additionalGraphs=additional_graphs_data,
             )
 
         else:
@@ -364,9 +331,6 @@ class UnderperformSegmTableWidget(Widget):
                 map(lambda x: 'Underestimation'
                               if x <= quntile_5 else 'Majority'
                               if x < quntile_95 else 'Overestimation', error))
-
-            params_data = []
-            additional_graphs_data = []
 
             for feature_name in results.columns.num_feature_names:  # + cat_feature_names: #feature_names:
 
@@ -411,29 +375,27 @@ class UnderperformSegmTableWidget(Widget):
                     }
                 )
 
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_hist',
-                        {
-                            "data": hist_figure['data'],
-                            "layout": hist_figure['layout']
-                        }
+                additional_graphs_data.extend(
+                    (
+                        AdditionalGraphInfo(
+                            feature_name + '_hist',
+                            {
+                                "data": hist_figure['data'],
+                                "layout": hist_figure['layout'],
+                            },
+                        ),
+                        AdditionalGraphInfo(
+                            feature_name + '_segm',
+                            {
+                                "data": segm_figure['data'],
+                                "layout": segm_figure['layout'],
+                            },
+                        ),
                     )
                 )
-
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_segm',
-                        {
-                            "data": segm_figure['data'],
-                            "layout": segm_figure['layout']
-                        }
-                    )
-                )
+            feature_type = 'cat'
 
             for feature_name in results.columns.cat_feature_names:  # feature_names:
-
-                feature_type = 'cat'
 
                 hist = px.histogram(reference_data, x=feature_name, color='Error bias', histnorm='percent',
                                     barmode='overlay',
@@ -477,63 +439,41 @@ class UnderperformSegmTableWidget(Widget):
                     }
                 )
 
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_hist',
-                        {
-                            "data": hist_figure['data'],
-                            "layout": hist_figure['layout']
-                        }
+                additional_graphs_data.extend(
+                    (
+                        AdditionalGraphInfo(
+                            feature_name + '_hist',
+                            {
+                                "data": hist_figure['data'],
+                                "layout": hist_figure['layout'],
+                            },
+                        ),
+                        AdditionalGraphInfo(
+                            feature_name + '_segm',
+                            {
+                                "data": segm_figure['data'],
+                                "layout": segm_figure['layout'],
+                            },
+                        ),
                     )
                 )
-
-                additional_graphs_data.append(
-                    AdditionalGraphInfo(
-                        feature_name + '_segm',
-                        {
-                            "data": segm_figure['data'],
-                            "layout": segm_figure['layout']
-                        }
-                    )
-                )
-
             reference_data.drop('Error bias', axis=1, inplace=True)
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="big_table",
                 size=2,
                 params={
                     "rowsPerPage": min(results.columns.get_features_len(), 10),
                     "columns": [
-                        {
-                            "title": "Feature",
-                            "field": "f1"
-                        },
-                        {
-                            "title": "Type",
-                            "field": "f2"
-                        },
-                        {
-                            "title": "Majority",
-                            "field": "f3"
-                        },
-                        {
-                            "title": "Underestimation",
-                            "field": "f4"
-                        },
-                        {
-                            "title": "Overestimation",
-                            "field": "f5"
-                        },
-                        {
-                            "title": "Range(%)",
-                            "field": "f6",
-                            "sort": "desc"
-                        }
+                        {"title": "Feature", "field": "f1"},
+                        {"title": "Type", "field": "f2"},
+                        {"title": "Majority", "field": "f3"},
+                        {"title": "Underestimation", "field": "f4"},
+                        {"title": "Overestimation", "field": "f5"},
+                        {"title": "Range(%)", "field": "f6", "sort": "desc"},
                     ],
-                    "data": params_data
+                    "data": params_data,
                 },
-                additionalGraphs=additional_graphs_data
+                additionalGraphs=additional_graphs_data,
             )
-        return widget_info
