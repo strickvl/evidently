@@ -96,18 +96,10 @@ def process_columns(dataset: pd.DataFrame, column_mapping: ColumnMapping) -> Dat
     utility_columns = [date_column, id_column, target_column]
 
     if isinstance(prediction_column, str):
-        if prediction_column in dataset:
-            prediction_column = prediction_column
-
-        else:
-            prediction_column = None
-
+        prediction_column = prediction_column if prediction_column in dataset else None
         utility_columns.append(prediction_column)
 
-    elif prediction_column is None:
-        pass
-
-    else:
+    elif prediction_column is not None:
         prediction_column = dataset[prediction_column].columns.tolist()
 
         if prediction_column:
@@ -185,17 +177,15 @@ def calculate_confusion_by_classes(confusion_matrix: pd.DataFrame, class_names: 
     false_positive = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)
     false_negative = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
     true_negative = confusion_matrix.sum() - (false_positive + false_negative + true_positive)
-    confusion_by_classes = {}
-
-    for idx, class_name in enumerate(class_names):
-        confusion_by_classes[str(class_name)] = {
+    return {
+        str(class_name): {
             "tp": true_positive[idx],
             "tn": true_negative[idx],
             "fp": false_positive[idx],
             "fn": false_negative[idx],
         }
-
-    return confusion_by_classes
+        for idx, class_name in enumerate(class_names)
+    }
 
 
 def recognize_task(target_name: str, reference_data: pd.DataFrame) -> str:
@@ -210,10 +200,9 @@ def recognize_task(target_name: str, reference_data: pd.DataFrame) -> str:
     Returns:
         Task parameter.
     """
-    if pd.api.types.is_numeric_dtype(reference_data[target_name]) and reference_data[target_name].nunique() >= 5:
-        task = "regression"
-
-    else:
-        task = "classification"
-
-    return task
+    return (
+        "regression"
+        if pd.api.types.is_numeric_dtype(reference_data[target_name])
+        and reference_data[target_name].nunique() >= 5
+        else "classification"
+    )

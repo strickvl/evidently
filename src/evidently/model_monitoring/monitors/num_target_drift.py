@@ -57,9 +57,8 @@ class NumTargetDriftMonitor(ModelMonitor):
         yield NumTargetDriftMonitorMetrics.count.create(results.current_data_count, dict(dataset="current"))
 
         if results.prediction_metrics:
-            for metric in self._yield_metrics(metrics=results.prediction_metrics, kind="prediction"):
-                yield metric
-
+            yield from self._yield_metrics(
+                metrics=results.prediction_metrics, kind="prediction"
+            )
         if results.target_metrics:
-            for metric in self._yield_metrics(metrics=results.target_metrics, kind="target"):
-                yield metric
+            yield from self._yield_metrics(metrics=results.target_metrics, kind="target")

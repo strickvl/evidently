@@ -95,7 +95,7 @@ class ProbClassificationPerformanceMonitor(ModelMonitor):
                 dict(dataset=dataset, class_name=class_x_name, type="target"),
             )
             yield ProbClassificationPerformanceMonitorMetricsMonitor.class_representation.create(
-                sum([i[idx] for i in metrics.confusion_matrix.values]),
+                sum(i[idx] for i in metrics.confusion_matrix.values),
                 dict(dataset=dataset, class_name=class_x_name, type="prediction"),
             )
 
@@ -126,9 +126,10 @@ class ProbClassificationPerformanceMonitor(ModelMonitor):
     def metrics(self, analyzer_results):
         results = ProbClassificationPerformanceAnalyzer.get_results(analyzer_results)
 
-        for metric in self._yield_metrics(results.reference_metrics, "reference", columns=results.columns):
-            yield metric
-
+        yield from self._yield_metrics(
+            results.reference_metrics, "reference", columns=results.columns
+        )
         if results.current_metrics:
-            for metric in self._yield_metrics(results.current_metrics, "current", columns=results.columns):
-                yield metric
+            yield from self._yield_metrics(
+                results.current_metrics, "current", columns=results.columns
+            )

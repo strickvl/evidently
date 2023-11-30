@@ -48,9 +48,6 @@ class DataQualityMonitor(ModelMonitor):
         results = DataQualityAnalyzer.get_results(analyzer_results)
 
         if results.reference_features_stats is not None:
-            for metric in self._yield_metrics(results.reference_features_stats, "reference"):
-                yield metric
-
+            yield from self._yield_metrics(results.reference_features_stats, "reference")
         if results.current_features_stats is not None:
-            for metric in self._yield_metrics(results.current_features_stats, "current"):
-                yield metric
+            yield from self._yield_metrics(results.current_features_stats, "current")

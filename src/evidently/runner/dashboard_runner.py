@@ -39,8 +39,8 @@ class DashboardRunner(Runner):
                 raise ValueError(f"Unknown tab {tab}")
             try:
                 verbose_level = int(params.get('verbose_level', None)) \
-                    if params.get('verbose_level', None) is not None\
-                    else None
+                        if params.get('verbose_level', None) is not None\
+                        else None
             except ValueError as ex:
                 raise ValueError(f"Failed to parse verbose level for tab {tab}") from ex
             include_widgets = params.get('include_widgets', None)
@@ -48,4 +48,4 @@ class DashboardRunner(Runner):
 
         dashboard = Dashboard(tabs=tabs, options=self.options.options)
         dashboard.calculate(reference_data, current_data, self.options.column_mapping)
-        dashboard.save(self.options.output_path + ".html")
+        dashboard.save(f"{self.options.output_path}.html")

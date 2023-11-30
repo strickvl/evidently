@@ -65,5 +65,4 @@ class ModelMonitoring(Pipeline):
 
     def metrics(self) -> Generator[MetricsType, None, None]:
         for monitor in self.monitors:
-            for metric in monitor.metrics(self.analyzers_results):
-                yield metric
+            yield from monitor.metrics(self.analyzers_results)

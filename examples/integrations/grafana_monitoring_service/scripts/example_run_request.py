@@ -20,10 +20,7 @@ class NumpyEncoder(json.JSONEncoder):
         if isinstance(obj, (np.generic, np.bool_)):
             return obj.item()
 
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-
-        return obj
+        return obj.tolist() if isinstance(obj, np.ndarray) else obj
 
 
 def send_data_row(dataset_name: str, data: Dict) -> None:
@@ -37,7 +34,7 @@ def send_data_row(dataset_name: str, data: Dict) -> None:
         )
 
         if response.status_code == 200:
-            print(f"Success.")
+            print("Success.")
 
         else:
             print(

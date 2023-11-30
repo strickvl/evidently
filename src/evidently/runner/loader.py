@@ -88,4 +88,4 @@ class RandomizedSkipRows:
         return self.selected_rows[idx]
 
     def _select(self):
-        return [bool(self.random.random() < self.ratio) for _ in range(1000)]
+        return [self.random.random() < self.ratio for _ in range(1000)]

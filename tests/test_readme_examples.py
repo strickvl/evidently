@@ -65,8 +65,7 @@ def iris_frame(iris):
 
 @pytest.fixture
 def iris_targets(iris):
-    iris_targets = iris.target_names
-    return iris_targets
+    return iris.target_names
 
 
 ###

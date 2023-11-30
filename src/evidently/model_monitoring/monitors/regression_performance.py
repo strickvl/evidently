@@ -29,25 +29,21 @@ class RegressionPerformanceMonitor(ModelMonitor):
         results = RegressionPerformanceAnalyzer.get_results(analyzer_results)
 
         if results.reference_metrics is not None:
-            for metric in self._yield_quality(results.reference_metrics, "reference"):
-                yield metric
-
-            for metric in self._yield_error_normality(results.reference_metrics.error_normality, "reference"):
-                yield metric
-
-            for metric in self._yield_underperformance(results.reference_metrics.underperformance, "reference"):
-                yield metric
-
+            yield from self._yield_quality(results.reference_metrics, "reference")
+            yield from self._yield_error_normality(
+                results.reference_metrics.error_normality, "reference"
+            )
+            yield from self._yield_underperformance(
+                results.reference_metrics.underperformance, "reference"
+            )
         if results.current_metrics is not None:
-            for metric in self._yield_quality(results.current_metrics, "current"):
-                yield metric
-
-            for metric in self._yield_error_normality(results.current_metrics.error_normality, "current"):
-                yield metric
-
-            for metric in self._yield_underperformance(results.current_metrics.underperformance, "current"):
-                yield metric
-
+            yield from self._yield_quality(results.current_metrics, "current")
+            yield from self._yield_error_normality(
+                results.current_metrics.error_normality, "current"
+            )
+            yield from self._yield_underperformance(
+                results.current_metrics.underperformance, "current"
+            )
         fields = [
             "ref_majority",
             "ref_under",

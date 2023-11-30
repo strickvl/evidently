@@ -92,14 +92,16 @@ class ProbClassPredictionCloudWidget(Widget):
 
             fig_json = json.loads(fig.to_json())
 
-            graphs.append({
-                "id": "tab_" + str(label),
-                "title": str(label),
-                "graph": {
-                    "data": fig_json["data"],
-                    "layout": fig_json["layout"],
+            graphs.append(
+                {
+                    "id": f"tab_{str(label)}",
+                    "title": str(label),
+                    "graph": {
+                        "data": fig_json["data"],
+                        "layout": fig_json["layout"],
+                    },
                 }
-            })
+            )
 
         return BaseWidgetInfo(
             title=self.title,

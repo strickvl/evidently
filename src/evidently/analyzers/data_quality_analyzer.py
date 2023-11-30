@@ -189,13 +189,15 @@ class DataQualityAnalyzer(Analyzer):
         target_name = columns.utility_columns.target
 
         if target_name is not None and target_name in dataset:
-            result.target_stats = {}
-            if task == "classification":
-                result.target_stats[target_name] = self._get_features_stats(dataset[target_name], feature_type="cat")
-
-            else:
-                result.target_stats[target_name] = self._get_features_stats(dataset[target_name], feature_type="num")
-
+            result.target_stats = {
+                target_name: self._get_features_stats(
+                    dataset[target_name], feature_type="cat"
+                )
+                if task == "classification"
+                else self._get_features_stats(
+                    dataset[target_name], feature_type="num"
+                )
+            }
         return result
 
     def calculate(
@@ -227,7 +229,7 @@ class DataQualityAnalyzer(Analyzer):
         if column_mapping.task is not None:
             task = column_mapping.task
 
-        elif column_mapping.task is None and target_name:
+        elif target_name:
             task = recognize_task(target_name, reference_data)
 
         else:
@@ -307,7 +309,7 @@ class DataQualityAnalyzer(Analyzer):
         result = FeatureQualityStats(feature_type=feature_type)
         all_values_count = feature.shape[0]
 
-        if not all_values_count > 0:
+        if all_values_count <= 0:
             # we have no data, return default stats for en empty dataset
             return result
 
@@ -397,12 +399,11 @@ class DataQualityAnalyzer(Analyzer):
         chi2_stat = chi2_contingency(arr, correction=False)
         phi2 = chi2_stat[0] / arr.sum()
         n_rows, n_cols = arr.shape
-        if min(n_cols - 1, n_rows - 1) == 0:
-            value = np.nan
-        else:
-            value = np.sqrt(phi2 / min(n_cols - 1, n_rows - 1))
-
-        return value
+        return (
+            np.nan
+            if min(n_cols - 1, n_rows - 1) == 0
+            else np.sqrt(phi2 / min(n_cols - 1, n_rows - 1))
+        )
 
     def _corr_matrix(self, df: pd.Series, func: Callable[[pd.Series, pd.Series], float]) -> pd.DataFrame:
         """Compute pairwise correlation of columns
@@ -412,21 +413,20 @@ class DataQualityAnalyzer(Analyzer):
         Returns:
             Correlation matrix.
         """
-        columns = df.columns
         K = df.shape[1]
         if K <= 1:
             return pd.DataFrame()
-        else:
-            corr_array = np.eye(K)
+        corr_array = np.eye(K)
 
-            for i in range(K):
-                for j in range(K):
-                    if i <= j:
-                        continue
-                    c = func(df[columns[i]], df[columns[j]])
-                    corr_array[i, j] = c
-                    corr_array[j, i] = c
-            return pd.DataFrame(data=corr_array, columns=columns, index=columns)
+        columns = df.columns
+        for i in range(K):
+            for j in range(K):
+                if i <= j:
+                    continue
+                c = func(df[columns[i]], df[columns[j]])
+                corr_array[i, j] = c
+                corr_array[j, i] = c
+        return pd.DataFrame(data=corr_array, columns=columns, index=columns)
 
     def _calculate_correlations(self, df, num_for_corr, cat_for_corr, kind):
         """Calculate correlation matrix depending on the kind parameter

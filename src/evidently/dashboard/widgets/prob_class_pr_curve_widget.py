@@ -55,11 +55,11 @@ class ProbClassPRCurveWidget(Widget):
         if metrics is None:
             return None
 
+        if metrics.pr_curve is None:
+            raise ValueError(f"Widget [{self.title}] got no pr_curve value")
+
         # plot PR-curve
         if len(utility_columns.prediction) <= 2:
-            if metrics.pr_curve is None:
-                raise ValueError(f"Widget [{self.title}] got no pr_curve value")
-
             pr_curve = metrics.pr_curve
             fig = go.Figure()
             fig.add_trace(go.Scatter(
@@ -81,19 +81,13 @@ class ProbClassPRCurveWidget(Widget):
 
             fig_json = json.loads(fig.to_json())
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="big_graph",
                 size=1 if current_data is not None else 2,
-                params={
-                    "data": fig_json['data'],
-                    "layout": fig_json['layout']
-                },
+                params={"data": fig_json['data'], "layout": fig_json['layout']},
             )
         else:
-            if metrics.pr_curve is None:
-                raise ValueError(f"Widget [{self.title}] got no pr_curve value")
-
             if not isinstance(metrics.pr_curve, dict):
                 raise ValueError(f"Widget [{self.title}] got incorrect type for pr_curve value")
 
@@ -121,21 +115,20 @@ class ProbClassPRCurveWidget(Widget):
 
                 fig_json = json.loads(fig.to_json())
 
-                graphs.append({
-                    "id": "tab_" + str(label),
-                    "title": str(label),
-                    "graph": {
-                        "data": fig_json["data"],
-                        "layout": fig_json["layout"],
+                graphs.append(
+                    {
+                        "id": f"tab_{str(label)}",
+                        "title": str(label),
+                        "graph": {
+                            "data": fig_json["data"],
+                            "layout": fig_json["layout"],
+                        },
                     }
-                })
+                )
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="tabbed_graph",
                 size=1 if current_data is not None else 2,
-                params={
-                    "graphs": graphs
-                },
+                params={"graphs": graphs},
             )
-        return widget_info

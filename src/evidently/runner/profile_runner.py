@@ -51,9 +51,11 @@ class ProfileRunner(Runner):
 
         profile = Profile(sections=parts, options=self.options.options)
         profile.calculate(reference_data, current_data, self.options.column_mapping)
-        output_path = self.options.output_path \
-            if self.options.output_path.endswith(".json") \
-            else self.options.output_path + ".json"
+        output_path = (
+            self.options.output_path
+            if self.options.output_path.endswith(".json")
+            else f"{self.options.output_path}.json"
+        )
 
         with open(output_path, 'w', encoding='utf-8') as out_file:
             json.dump(profile.object(), out_file, indent=2 if self.options.pretty_print else None, cls=NumpyEncoder)

@@ -14,7 +14,7 @@ try:
     from evidently.model_profile.sections import DataDriftProfileSection
 
 except Exception as e:
-    print("Error  {} ".format(e))
+    print(f"Error  {e} ")
 
 dir_path = "reports"
 file_path = "boston_data_drift_by_airflow.html"
@@ -38,7 +38,7 @@ def drift_analysis_execute(**context):
     try:
         os.mkdir(dir_path)
     except OSError:
-        print("Creation of the directory {} failed".format(dir_path))
+        print(f"Creation of the directory {dir_path} failed")
 
     boston_data_drift_dashboard.save(os.path.join(dir_path, file_path))
 

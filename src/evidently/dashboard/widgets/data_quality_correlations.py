@@ -69,7 +69,7 @@ class DataQualityCorrelationsWidget(Widget):
 
         metrics = self._make_metrics(reference_correlations, current_correlations)
 
-        wi = BaseWidgetInfo(
+        return BaseWidgetInfo(
             type="rich_data",
             title="",
             size=2,
@@ -78,15 +78,10 @@ class DataQualityCorrelationsWidget(Widget):
                 "description": "",
                 "metricsValuesHeaders": metrics_values_headers,
                 "metrics": metrics,
-                "details": {
-                    "parts": parts,
-                    "insights": []
-                }
+                "details": {"parts": parts, "insights": []},
             },
-            additionalGraphs=additional_graphs
+            additionalGraphs=additional_graphs,
         )
-
-        return wi
 
     def _plot_correlation_figure(self, kind: str, reference_correlations: dict,
                                  current_correlations: Optional[dict]) -> dict:
@@ -127,8 +122,7 @@ class DataQualityCorrelationsWidget(Widget):
                 coloraxis="coloraxis")
             fig.append_trace(trace, 1, 2)
         fig.update_layout(coloraxis={'colorscale': 'RdBu_r'})
-        correlation_figure = json.loads(fig.to_json())
-        return correlation_figure
+        return json.loads(fig.to_json())
 
     def _get_df_corr_features_sorted(self, df_corr: pd.DataFrame) -> pd.DataFrame:
         df_corr = df_corr.stack().reset_index()

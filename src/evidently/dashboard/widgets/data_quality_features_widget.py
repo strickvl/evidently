@@ -58,12 +58,7 @@ class DataQualityFeaturesWidget(Widget):
         if target_column:
             all_features = [target_column] + all_features
 
-        if is_current_data:
-            metrics_values_headers = ["reference", "current"]
-
-        else:
-            metrics_values_headers = [""]
-
+        metrics_values_headers = ["reference", "current"] if is_current_data else [""]
         widgets_list = []
         for feature_name in all_features:
             additional_graphs = []
@@ -160,12 +155,7 @@ class DataQualityFeaturesWidget(Widget):
         result = []
         reference_stats_dict = reference_stats.as_dict()
 
-        if current_stats is None:
-            current_stats_dict = None
-
-        else:
-            current_stats_dict = current_stats.as_dict()
-
+        current_stats_dict = None if current_stats is None else current_stats.as_dict()
         for stat_label, stat_field, stat_field_percentage in stats_list:
             values = [get_values_as_string(reference_stats_dict, stat_field, stat_field_percentage)]
 
@@ -201,9 +191,16 @@ class DataQualityFeaturesWidget(Widget):
             ]
 
             if current_stats:
-                cat_features.append(("new categories", "new_in_current_values_count", None))
-                cat_features.append(("missing categories", "unused_in_current_values_count", None))
-
+                cat_features.extend(
+                    (
+                        ("new categories", "new_in_current_values_count", None),
+                        (
+                            "missing categories",
+                            "unused_in_current_values_count",
+                            None,
+                        ),
+                    )
+                )
             metrics.extend(self._get_stats_with_names(cat_features, reference_stats, current_stats))
 
         elif reference_stats.is_numeric():
@@ -261,12 +258,18 @@ class DataQualityFeaturesWidget(Widget):
                         direction="right",
                         x=1.0,
                         yanchor="top",
-                        buttons=list(
-                            [
-                                dict(label="Linear Scale", method="update", args=[{"visible": [True, False]}]),
-                                dict(label="Log Scale", method="update", args=[{"visible": [False, True]}]),
-                            ]
-                        ),
+                        buttons=[
+                            dict(
+                                label="Linear Scale",
+                                method="update",
+                                args=[{"visible": [True, False]}],
+                            ),
+                            dict(
+                                label="Log Scale",
+                                method="update",
+                                args=[{"visible": [False, True]}],
+                            ),
+                        ],
                     )
                 ]
 
@@ -301,18 +304,18 @@ class DataQualityFeaturesWidget(Widget):
                         direction="right",
                         x=1.0,
                         yanchor="top",
-                        buttons=list(
-                            [
-                                dict(
-                                    label="Linear Scale",
-                                    method="update",
-                                    args=[{"visible": [True, False, True, False]}],
-                                ),
-                                dict(
-                                    label="Log Scale", method="update", args=[{"visible": [False, True, False, True]}]
-                                ),
-                            ]
-                        ),
+                        buttons=[
+                            dict(
+                                label="Linear Scale",
+                                method="update",
+                                args=[{"visible": [True, False, True, False]}],
+                            ),
+                            dict(
+                                label="Log Scale",
+                                method="update",
+                                args=[{"visible": [False, True, False, True]}],
+                            ),
+                        ],
                     )
                 ]
             layout = dict(updatemenus=updatemenus)
@@ -324,7 +327,7 @@ class DataQualityFeaturesWidget(Widget):
             cats = list(reference_data[feature_name].value_counts().index.astype(str))
             if "other" in cats:
                 cats.remove("other")
-                cats = cats + ["other"]
+                cats += ["other"]
             if current_data is None:
                 fig.add_trace(go.Histogram(x=reference_data[feature_name], marker_color=color_options.primary_color))
             else:
@@ -404,8 +407,7 @@ class DataQualityFeaturesWidget(Widget):
             return {}
 
         fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        fig_main_distr = json.loads(fig.to_json())
-        return fig_main_distr
+        return json.loads(fig.to_json())
 
     @staticmethod
     def assemble_parts(
@@ -413,23 +415,33 @@ class DataQualityFeaturesWidget(Widget):
     ) -> List:
         parts = []
         if date_column and feature_type != "datetime":
-            parts.append({"title": feature_name + " in time", "id": feature_name + "_in_time"})
+            parts.append(
+                {
+                    "title": f"{feature_name} in time",
+                    "id": f"{feature_name}_in_time",
+                }
+            )
         if target_column and feature_name != target_column:
-            parts.append({"title": feature_name + " by target", "id": feature_name + "_by_target"})
+            parts.append(
+                {
+                    "title": f"{feature_name} by target",
+                    "id": f"{feature_name}_by_target",
+                }
+            )
         return parts
 
     @staticmethod
     def _transform_df_to_time_mean_view(df: pd.DataFrame, date_column: str, feature_name: str):
-        df = df.groupby(date_column + "_period")[feature_name].mean().reset_index()
-        df[date_column] = df[date_column + "_period"].dt.to_timestamp()
+        df = df.groupby(f"{date_column}_period")[feature_name].mean().reset_index()
+        df[date_column] = df[f"{date_column}_period"].dt.to_timestamp()
         return df
 
     @staticmethod
     def _transform_df_to_time_count_view(df: pd.DataFrame, date_column: str, feature_name: str):
-        df = df.groupby([date_column + "_period", feature_name]).size()
+        df = df.groupby([f"{date_column}_period", feature_name]).size()
         df.name = "num"
         df = df.reset_index()
-        df[date_column] = df[date_column + "_period"].dt.to_timestamp()
+        df[date_column] = df[f"{date_column}_period"].dt.to_timestamp()
         return df
 
     def _plot_feature_in_time_1_df(
@@ -440,7 +452,7 @@ class DataQualityFeaturesWidget(Widget):
         feature_type: str,
         color_options: ColorOptions,
     ) -> dict:
-        tmp = reference_data[[date_column + "_period", feature_name]].copy()
+        tmp = reference_data[[f"{date_column}_period", feature_name]].copy()
         feature_in_time_figure = {}
 
         if feature_type == "num":
@@ -454,7 +466,7 @@ class DataQualityFeaturesWidget(Widget):
                     line=dict(color=color_options.primary_color, shape="spline"),
                 )
             )
-            fig.update_layout(yaxis_title="Mean " + feature_name + " per " + self.period_prefix)
+            fig.update_layout(yaxis_title=f"Mean {feature_name} per " + self.period_prefix)
             feature_in_time_figure = json.loads(fig.to_json())
 
         elif feature_type == "cat":
@@ -486,8 +498,8 @@ class DataQualityFeaturesWidget(Widget):
         feature_type: str,
         color_options: ColorOptions,
     ) -> dict:
-        tmp_ref = reference_data[[date_column + "_period", feature_name]].copy()
-        tmp_curr = current_data[[date_column + "_period", feature_name]].copy()
+        tmp_ref = reference_data[[f"{date_column}_period", feature_name]].copy()
+        tmp_curr = current_data[[f"{date_column}_period", feature_name]].copy()
         feature_in_time_figure = {}
 
         if feature_type == "num":
@@ -511,7 +523,7 @@ class DataQualityFeaturesWidget(Widget):
                     name="current",
                 )
             )
-            fig.update_layout(yaxis_title="Mean " + feature_name + " per " + self.period_prefix)
+            fig.update_layout(yaxis_title=f"Mean {feature_name} per " + self.period_prefix)
             feature_in_time_figure = json.loads(fig.to_json())
 
         elif feature_type == "cat":
@@ -592,30 +604,28 @@ class DataQualityFeaturesWidget(Widget):
                     )
                     fig.add_trace(trace)
                 fig.update_layout(yaxis_title="count")
+        elif target_type == "num":
+            fig = go.Figure()
+            trace = go.Scatter(
+                x=tmp.sample(min(2000, len(tmp)), random_state=0)[feature_name],
+                y=tmp.sample(min(2000, len(tmp)), random_state=0)[target_column],
+                mode="markers",
+                marker_color=color_options.primary_color,
+            )
+            fig.add_trace(trace)
+
+            fig.update_layout(
+                yaxis_title=target_column, xaxis_title=feature_name, legend={"itemsizing": "constant"}
+            )
+            fig.update_traces(marker_size=4)
+
         else:
-            if target_type == "num":
-                fig = go.Figure()
-                trace = go.Scatter(
-                    x=tmp.sample(min(2000, len(tmp)), random_state=0)[feature_name],
-                    y=tmp.sample(min(2000, len(tmp)), random_state=0)[target_column],
-                    mode="markers",
-                    marker_color=color_options.primary_color,
-                )
-                fig.add_trace(trace)
-
-                fig.update_layout(
-                    yaxis_title=target_column, xaxis_title=feature_name, legend={"itemsizing": "constant"}
-                )
-                fig.update_traces(marker_size=4)
-
-            else:
-                fig = go.Figure()
-                trace = go.Box(y=tmp[feature_name], x=tmp[target_column], marker_color=color_options.primary_color)
-                fig.add_trace(trace)
-                fig.update_layout(yaxis_title=feature_name, xaxis_title=target_column)
-                fig.update_traces(marker_size=3)
-        feature_and_target_figure = json.loads(fig.to_json())
-        return feature_and_target_figure
+            fig = go.Figure()
+            trace = go.Box(y=tmp[feature_name], x=tmp[target_column], marker_color=color_options.primary_color)
+            fig.add_trace(trace)
+            fig.update_layout(yaxis_title=feature_name, xaxis_title=target_column)
+            fig.update_traces(marker_size=3)
+        return json.loads(fig.to_json())
 
     def _plot_feature_and_target_2_df(
         self,
@@ -674,51 +684,49 @@ class DataQualityFeaturesWidget(Widget):
                     )
                     fig.append_trace(trace, 1, 2)
                 fig.update_layout(yaxis_title="count")
+        elif target_type == "num":
+            fig = make_subplots(rows=1, cols=2, shared_yaxes=True)
+            trace = go.Scatter(
+                x=tmp_ref.sample(min(2000, len(tmp_ref)), random_state=0)[feature_name],
+                y=tmp_ref.sample(min(2000, len(tmp_ref)), random_state=0)[target_column],
+                mode="markers",
+                marker_color=color_options.get_reference_data_color(),
+                name="reference",
+            )
+            fig.append_trace(trace, 1, 1)
+            trace = go.Scatter(
+                x=tmp_curr.sample(min(2000, len(tmp_curr)), random_state=0)[feature_name],
+                y=tmp_curr.sample(min(2000, len(tmp_curr)), random_state=0)[target_column],
+                mode="markers",
+                marker_color=color_options.get_current_data_color(),
+                name="current",
+            )
+            fig.append_trace(trace, 1, 2)
+            fig.update_layout(yaxis_title=target_column, legend={"itemsizing": "constant"})
+            fig.update_xaxes(title_text=feature_name, row=1, col=1)
+            fig.update_xaxes(title_text=feature_name, row=1, col=2)
+            fig.update_traces(marker_size=4)
+
         else:
-            if target_type == "num":
-                fig = make_subplots(rows=1, cols=2, shared_yaxes=True)
-                trace = go.Scatter(
-                    x=tmp_ref.sample(min(2000, len(tmp_ref)), random_state=0)[feature_name],
-                    y=tmp_ref.sample(min(2000, len(tmp_ref)), random_state=0)[target_column],
-                    mode="markers",
-                    marker_color=color_options.get_reference_data_color(),
-                    name="reference",
-                )
-                fig.append_trace(trace, 1, 1)
-                trace = go.Scatter(
-                    x=tmp_curr.sample(min(2000, len(tmp_curr)), random_state=0)[feature_name],
-                    y=tmp_curr.sample(min(2000, len(tmp_curr)), random_state=0)[target_column],
-                    mode="markers",
-                    marker_color=color_options.get_current_data_color(),
-                    name="current",
-                )
-                fig.append_trace(trace, 1, 2)
-                fig.update_layout(yaxis_title=target_column, legend={"itemsizing": "constant"})
-                fig.update_xaxes(title_text=feature_name, row=1, col=1)
-                fig.update_xaxes(title_text=feature_name, row=1, col=2)
-                fig.update_traces(marker_size=4)
+            fig = go.Figure()
+            trace1 = go.Box(
+                x=tmp_ref[target_column],
+                y=tmp_ref[feature_name],
+                marker_color=color_options.get_reference_data_color(),
+                name="reference",
+            )
+            fig.add_trace(trace1)
+            trace2 = go.Box(
+                x=tmp_curr[target_column],
+                y=tmp_curr[feature_name],
+                marker_color=color_options.get_current_data_color(),
+                name="current",
+            )
+            fig.add_trace(trace2)
+            fig.update_layout(yaxis_title=feature_name, xaxis_title=target_column, boxmode="group")
+            fig.update_traces(marker_size=3)
 
-            else:
-                fig = go.Figure()
-                trace1 = go.Box(
-                    x=tmp_ref[target_column],
-                    y=tmp_ref[feature_name],
-                    marker_color=color_options.get_reference_data_color(),
-                    name="reference",
-                )
-                fig.add_trace(trace1)
-                trace2 = go.Box(
-                    x=tmp_curr[target_column],
-                    y=tmp_curr[feature_name],
-                    marker_color=color_options.get_current_data_color(),
-                    name="current",
-                )
-                fig.add_trace(trace2)
-                fig.update_layout(yaxis_title=feature_name, xaxis_title=target_column, boxmode="group")
-                fig.update_traces(marker_size=3)
-
-        feature_and_target_figure = json.loads(fig.to_json())
-        return feature_and_target_figure
+        return json.loads(fig.to_json())
 
     @staticmethod
     def _transform_cat_features(
@@ -729,7 +737,7 @@ class DataQualityFeaturesWidget(Widget):
         target_type: Optional[str],
     ):
         if target_column and target_type == "cat":
-            cat_feature_names = cat_feature_names + [target_column]
+            cat_feature_names += [target_column]
         for feature_name in cat_feature_names:
             if reference_data[feature_name].nunique() > 6:
                 cats = reference_data[feature_name].value_counts().iloc[:5].index.astype(str)

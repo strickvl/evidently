@@ -84,14 +84,11 @@ class ProbClassRocCurveWidget(Widget):
 
             fig_json = json.loads(fig.to_json())
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="big_graph",
                 size=1 if current_data is not None else 2,
-                params={
-                    "data": fig_json['data'],
-                    "layout": fig_json['layout']
-                },
+                params={"data": fig_json['data'], "layout": fig_json['layout']},
                 additionalGraphs=[],
             )
 
@@ -137,12 +134,9 @@ class ProbClassRocCurveWidget(Widget):
                     }
                 })
 
-            widget_info = BaseWidgetInfo(
+            return BaseWidgetInfo(
                 title=self.title,
                 type="tabbed_graph",
                 size=1 if current_data is not None else 2,
-                params={
-                    "graphs": graphs
-                },
+                params={"graphs": graphs},
             )
-        return widget_info
